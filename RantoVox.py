@@ -1,9 +1,8 @@
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ContentType
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ContentType, CallbackQuery
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.types import CallbackQuery
 from vosk import Model, KaldiRecognizer, SetLogLevel
 from loguru import logger
 from dotenv import load_dotenv
