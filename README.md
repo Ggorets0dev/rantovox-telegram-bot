@@ -37,7 +37,7 @@ RantoVox has a special function called **ExtraTextProcess**, which introduces ad
 
 The following steps are required for RantoVox to work correctly:
 1) Clone the repository (download source code)
-2) Install dependencies using pip with requirments.txt
+2) Install dependencies using pip with requirements.txt
 3) Create your own **.env** file in bot folder with the **TELEGRAM_TOKEN** variable
 4) Set preferred voice names in the configuration file (you can see the available ones with [pyttsx3](https://pypi.org/project/pyttsx3/) in your system)
 5) Download latest [Vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into bot's home folder and set their's names in configuration file
