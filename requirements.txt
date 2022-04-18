@@ -1,0 +1,8 @@
+aiogram
+vosk
+loguru
+python-dotenv
+pyttsx3
+pyfiglet
+wave
+pymorphy2
