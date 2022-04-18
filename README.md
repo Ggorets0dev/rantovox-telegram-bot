@@ -40,7 +40,7 @@ The following steps are required for RantoVox to work correctly:
 2) Install dependencies using pip with requirments.txt
 3) Create your own **.env** file in bot folder with the **TELEGRAM_TOKEN** variable
 4) Set preferred voice names in the configuration file (you can see the available ones with [pyttsx3](https://pypi.org/project/pyttsx3/) in your system)
-5) Download the latest [Vosk](https://pypi.org/project/vosk/) russian language model (the small model is more preferable) and set it's name in confuguration file **(model folder must be in the same folder as the main executable file)**
+5) Download latest [Vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into bot's home folder and set their's names in configuration file
 6) Download and install [FFmpeg](https://ffmpeg.org/) in your system **(don't forget to add it to PATH)**
 
 
