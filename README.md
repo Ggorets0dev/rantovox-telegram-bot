@@ -2,7 +2,7 @@
 Telegram bot for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries on *Russian* and *English* languages.
 
 <p align='left'>
-   <a href="https://t.me/RantoVox">
+   <a href="https://t.me/RantoVoxBot">
        <img height=30 src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
     </a>
 </p>
