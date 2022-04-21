@@ -1,5 +1,5 @@
 # RantoVox Telegram Bot
-Telegram bot for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries on *Russian* and *English* languages.
+Telegram bot for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries. Languages supported: **Russian**, **English** (queries and interface).
 
 <p align='left'>
    <a href="https://t.me/RantoVoxBot">
@@ -59,9 +59,10 @@ pip install -r requirements.txt
 
 The following commands are available in RantoVox:
 * **/start** - Launch a bot for your account
-* **/help** - Get an informational summary of the operating principles 
-* **/setvoice** - Change voice gender for requests (TTS)
-* **/setlang** - Change language for requests (STT)
+* **/help** - Get an informational summary of the operating principles
+* **/setlocale** - Set language of bot's interface 
+* **/setvoice** - Set voice gender for requests (TTS)
+* **/setlang** - Set language for requests (STT)
 
 
 ## Data privacy

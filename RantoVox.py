@@ -146,8 +146,8 @@ class Cond(StatesGroup):
 async def Start(message: types.Message, state: FSMContext):
     await Cond.Req.set()
     await state.update_data(BOTLanguage="RUSSIAN")
-    await state.update_data(VoiceGender="Male")
     await state.update_data(STTLanguage="RUSSIAN")
+    await state.update_data(VoiceGender="Male")
     
     await message.answer(Locale.localization["RUSSIAN"]['start'] + '\n\n\n' + Locale.localization["ENGLISH"]['start'], parse_mode='HTML')
 
@@ -163,7 +163,7 @@ async def ShowAvailableVoices(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
     voice_gender = FullData.get("VoiceGender")
     bot_language = FullData.get('BOTLanguage')
-    voice_name = "Неизвестно"
+    voice_name = "Unknown"
 
     voice_choice = InlineKeyboardMarkup(row_width=1)
     if voice_gender == 'Male':
@@ -181,9 +181,9 @@ async def ShowAvailableVoices(message: types.Message, state: FSMContext):
 async def SetVoice(call: CallbackQuery, state: FSMContext):
     FullData = await state.get_data()
     bot_language = FullData.get('BOTLanguage')
+    new_voice_name = "Unknown"
 
     voice_gender = call.data[:len(call.data)-2]
-    new_voice_name = "Unknown"
 
     await call.message.delete()
     if voice_gender == 'Male':
@@ -245,7 +245,6 @@ async def SetSTTLang(call: CallbackQuery, state: FSMContext):
 @dp.message_handler(commands=['setlocale'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableLocales(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    stt_lang = FullData.get("STTLanguage")
     bot_language = FullData.get("BOTLanguage")
     bot_lang_using_now = "Unknown"
 

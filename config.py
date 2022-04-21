@@ -1,4 +1,4 @@
-RV_Version = '1.1.0'
+RV_Version = '1.1.1'
 
 RU_lang_model_dirname = 'vosk-model-small-ru-0.22'
 ENG_lang_model_dirname = 'vosk-model-small-en-us-0.15'
