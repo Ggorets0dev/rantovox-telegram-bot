@@ -14,7 +14,8 @@ import wave
 import json
 import random
 import pymorphy2
-import RV_Config as config
+import config
+import localization as Locale
 
 
 def VoskSpeechRecog(wav_filepath, lang_model):
@@ -143,53 +144,60 @@ class Cond(StatesGroup):
 
 @dp.message_handler(commands=['start'], commands_prefix='/')
 async def Start(message: types.Message, state: FSMContext):
-    await message.answer("🔥 Добро пожаловать в чат с ботом <b>RantoVox</b>!\n\nДанный проект выполняет запросы конвертирования TTS и SST, для более подробной информации используйте /help", parse_mode='HTML')
     await Cond.Req.set()
+    await state.update_data(BOTLanguage="RUSSIAN")
     await state.update_data(VoiceGender="Male")
     await state.update_data(STTLanguage="RUSSIAN")
+    
+    await message.answer(Locale.localization["RUSSIAN"]['start'] + '\n\n\n' + Locale.localization["ENGLISH"]['start'], parse_mode='HTML')
 
 
 @dp.message_handler(commands=['help'], commands_prefix='/', state=Cond.Req)
-async def Help(message: types.Message):
-    await message.answer("🔄 <b>Возможности конвертирования:</b>\nТекст ---> Голос <i>(Отправьте текстовое сообщение)</i>\nГолос ---> Текст <i>(Отправьте голосовое сообщение)</i>\n\n 🔐 <b>Конфиденциальность данных: </b> <i>Конвертирование выполняется прямо на хосте RantoVox, поэтому ваши данные не передаются на какие-либо сторонние сервера для обработки и удаляются без возможности восстановления сразу же после выполнения вашего запроса.</i>", parse_mode='HTML')
+async def Help(message: types.Message, state: FSMContext):
+    FullData = await state.get_data()
+    await message.answer(Locale.localization[FullData.get('BOTLanguage')]['help'], parse_mode='HTML')
 
 
 @dp.message_handler(commands=['setvoice'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableVoices(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
     voice_gender = FullData.get("VoiceGender")
+    bot_language = FullData.get('BOTLanguage')
     voice_name = "Неизвестно"
 
     voice_choice = InlineKeyboardMarkup(row_width=1)
     if voice_gender == 'Male':
-        voice_choice.insert(InlineKeyboardButton(text='👩 Женский', callback_data='FemaleVG'))
-        voice_name = 'Мужской'
+        voice_choice.insert(InlineKeyboardButton(text=f"👩 {Locale.localization[bot_language]['female_button']}", callback_data='FemaleVG'))
+        voice_name = Locale.localization[bot_language]['male_button']
     elif voice_gender == 'Female':
-        voice_choice.insert(InlineKeyboardButton(text='👨 Мужской', callback_data='MaleVG'))
-        voice_name = 'Женский'
-    voice_choice.insert(InlineKeyboardButton(text='💢 Отмена', callback_data='CancelVG'))
+        voice_choice.insert(InlineKeyboardButton(text=f"👨 {Locale.localization[bot_language]['male_button']}", callback_data='MaleVG'))
+        voice_name = Locale.localization[bot_language]['female_button']
+    voice_choice.insert(InlineKeyboardButton(text=f"💢 {Locale.localization[bot_language]['cancel_button']}", callback_data='CancelVG'))
 
-    await message.answer(text=f'⚙️ Выберите озвучку (Сейчас: {voice_name})', reply_markup=voice_choice)
+    await message.answer(text=Locale.localization[bot_language]['voice_gender_choice'].format(voice_name), reply_markup=voice_choice, parse_mode='HTML')
 
 
 @dp.callback_query_handler(text_contains='VG', state=Cond.Req)
 async def SetVoice(call: CallbackQuery, state: FSMContext):
+    FullData = await state.get_data()
+    bot_language = FullData.get('BOTLanguage')
+
     voice_gender = call.data[:len(call.data)-2]
-    new_voice_name = "Неизвестно"
+    new_voice_name = "Unknown"
 
     await call.message.delete()
     if voice_gender == 'Male':
-        await call.message.answer('✅ Голос озвучки успешно изменен на <b>Мужской</b>', parse_mode='HTML')
+        await call.message.answer(Locale.localization[bot_language]['voice_gender_changed'].format(Locale.localization[bot_language]['male_button']), parse_mode='HTML')
         await state.update_data(VoiceGender="Male")
         new_voice_name = config.male_voice_name
 
     elif voice_gender == 'Female':
-        await call.message.answer('✅ Голос озвучки успешно изменен на <b>Женский</b>', parse_mode='HTML')
+        await call.message.answer(Locale.localization[bot_language]['voice_gender_changed'].format(Locale.localization[bot_language]['female_button']), parse_mode='HTML')
         await state.update_data(VoiceGender="Female")
         new_voice_name = config.female_voice_name
 
     else:
-        return await call.message.answer('💢 <b>Озвучка не была изменена</b>', parse_mode='HTML')
+        return await call.message.answer(Locale.localization[bot_language]['voice_gender_left'], parse_mode='HTML')
 
 
     all_voices = TTS.getProperty('voices')
@@ -200,47 +208,83 @@ async def SetVoice(call: CallbackQuery, state: FSMContext):
 
 
 @dp.message_handler(commands=['setlang'], commands_prefix='/', state=Cond.Req)
-async def ShowAvailableLangs(message: types.Message, state: FSMContext):
+async def ShowAvailableSTTLangs(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
     stt_lang = FullData.get("STTLanguage")
-    stt_lang_called_now = "Неизвестно"
+    bot_language = FullData.get("BOTLanguage")
+    stt_lang_using_now = "Unknown"
 
     lang_choice = InlineKeyboardMarkup(row_width=1)
     if stt_lang == 'ENGLISH':
-        lang_choice.insert(InlineKeyboardButton(text='🇷🇺 Русский', callback_data='RussianSTTL'))
-        stt_lang_called_now = 'Английский'
+        lang_choice.insert(InlineKeyboardButton(text=f"🇷🇺 {Locale.localization[bot_language]['russian_button']}", callback_data='RussianSTTL'))
+        stt_lang_using_now = Locale.localization[bot_language]['english_button']
     elif stt_lang == 'RUSSIAN':
-        lang_choice.insert(InlineKeyboardButton(text='🇺🇸 Английский', callback_data='EnglishSTTL'))
-        stt_lang_called_now = 'Русский'
-    lang_choice.insert(InlineKeyboardButton(text='💢 Отмена', callback_data='CancelSTTL'))
+        lang_choice.insert(InlineKeyboardButton(text=f"🇺🇸 {Locale.localization[bot_language]['english_button']}", callback_data='EnglishSTTL'))
+        stt_lang_using_now = Locale.localization[bot_language]['russian_button']
+    lang_choice.insert(InlineKeyboardButton(text=f"💢 {Locale.localization[bot_language]['cancel_button']}", callback_data='CancelSTTL'))
 
-    await message.answer(text=f'⚙️ Выберите язык для запросов Голос-Текст (Сейчас: {stt_lang_called_now})', reply_markup=lang_choice)
+    await message.answer(text=Locale.localization[bot_language]['stt_lang_choice'].format(stt_lang_using_now), reply_markup=lang_choice)
 
 
 @dp.callback_query_handler(text_contains='STTL', state=Cond.Req)
 async def SetSTTLang(call: CallbackQuery, state: FSMContext):
+    FullData = await state.get_data()
+    bot_language = FullData.get("BOTLanguage")
+
     stt_lang = call.data[:len(call.data)-4]
 
     await call.message.delete()
-    if stt_lang == 'Russian':
-        await call.message.answer('✅ Язык для запросов Голос-Текст успешно изменен на <b>Русский</b>', parse_mode='HTML')
-        await state.update_data(STTLanguage=stt_lang.upper())
-
-    elif stt_lang == 'English':
-        await call.message.answer('✅ Язык для запросов Голос-Текст успешно изменен на <b>Английский</b>', parse_mode='HTML')
+    if stt_lang != 'Cancel':
+        await call.message.answer(text=Locale.localization[bot_language]['stt_lang_changed'].format(Locale.localization[bot_language][f"{stt_lang.lower()}_button"]), parse_mode='HTML')
         await state.update_data(STTLanguage=stt_lang.upper())
 
     else:
-        return await call.message.answer('💢 <b>Язык для запросов Голос-Текст не был изменен</b>', parse_mode='HTML')
+        return await call.message.answer(text=Locale.localization[bot_language]['stt_lang_left'], parse_mode='HTML')
     
+
+@dp.message_handler(commands=['setlocale'], commands_prefix='/', state=Cond.Req)
+async def ShowAvailableLocales(message: types.Message, state: FSMContext):
+    FullData = await state.get_data()
+    stt_lang = FullData.get("STTLanguage")
+    bot_language = FullData.get("BOTLanguage")
+    bot_lang_using_now = "Unknown"
+
+    locale_choice = InlineKeyboardMarkup(row_width=1)
+    if bot_language == 'ENGLISH':
+        locale_choice.insert(InlineKeyboardButton(text=f"🇷🇺 {Locale.localization[bot_language]['russian_button']}", callback_data='RussianBOTL'))
+        bot_lang_using_now = Locale.localization[bot_language]['english_button']
+    elif bot_language == 'RUSSIAN':
+        locale_choice.insert(InlineKeyboardButton(text=f"🇺🇸 {Locale.localization[bot_language]['english_button']}", callback_data='EnglishBOTL'))
+        bot_lang_using_now = Locale.localization[bot_language]['russian_button']
+    locale_choice.insert(InlineKeyboardButton(text=f"💢 {Locale.localization[bot_language]['cancel_button']}", callback_data='CancelBOTL'))
+
+    await message.answer(text=Locale.localization[bot_language]['bot_locale_choice'].format(bot_lang_using_now), parse_mode='HTML', reply_markup=locale_choice)
+
+
+@dp.callback_query_handler(text_contains='BOTL', state=Cond.Req)
+async def SetBotLocale(call: CallbackQuery, state: FSMContext):
+    FullData = await state.get_data()
+    bot_language = FullData.get("BOTLanguage")
+
+    new_bot_locale = call.data[:len(call.data)-4]
+
+    await call.message.delete()
+    if new_bot_locale != 'Cancel':
+        await call.message.answer(text=Locale.localization[new_bot_locale.upper()]['bot_locale_changed'].format(Locale.localization[new_bot_locale.upper()][f"{new_bot_locale.lower()}_button"]), parse_mode='HTML')
+        await state.update_data(BOTLanguage=new_bot_locale.upper())
+
+    else:
+        return await call.message.answer(text=Locale.localization[bot_language]['bot_locale_left'], parse_mode='HTML')
+
 
 @dp.message_handler(state=Cond.Req, content_types=[ContentType.TEXT])
 async def TTS_REQ(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
     voice_gender = FullData.get('VoiceGender')
+    bot_language = FullData.get('BOTLanguage')
     
     if '/start' in message.text:
-        return await message.answer('✳️ <b>RantoVox</b> уже готов принимать ваши сообщения, повторный запуск не требуется', parse_mode='HTML')
+        return await message.answer(Locale.localization[bot_language]['start_again'], parse_mode='HTML')
 
     if voice_gender == 'Male':
         voice_to_use = config.male_voice_name
@@ -260,7 +304,7 @@ async def TTS_REQ(message: types.Message, state: FSMContext):
         TTS.runAndWait()
     except:
         logger.error(f'Failed to convert text to voice for the user {message.from_user.id}')
-        return message.reply('💢 Не удалось преобразовать ваше текстовое сообщение в голосовое, попробуйте повторить свой запрос позднее', parse_mode='HTML')
+        return await message.reply(Locale.localization[bot_language]['request_failed'], parse_mode='HTML')
     
     FromPath = os.path.join(os.path.dirname(__file__), f'VoiceFor{message.from_user.id}_{req_id}.wav')
     ToPath = os.path.join(os.path.dirname(__file__), f'VoiceFor{message.from_user.id}_{req_id}.ogg')
@@ -273,7 +317,7 @@ async def TTS_REQ(message: types.Message, state: FSMContext):
     except:
         os.remove(FromPath)
         logger.error(f'An error occurred while converting a voice message from a user {message.from_user.id}')
-        return await message.reply('💢 Не удалось преобразовать ваше текстовое сообщение в голосовое, попробуйте повторить свой запрос позднее', parse_mode='HTML')
+        return await message.reply(Locale.localization[bot_language]['request_failed'], parse_mode='HTML')
     
     await bot.send_voice(message.chat.id, open(ToPath, 'rb'), reply_to_message_id=message.message_id)
     logger.success(f"Performed TTS request for a user {message.from_user.id}")
@@ -284,7 +328,9 @@ async def TTS_REQ(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Cond.Req, content_types=[ContentType.VOICE])
 async def STT_REQ(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    
+    bot_language = FullData.get('BOTLanguage')
+    stt_language = FullData.get('STTLanguage')
+
     voice_msg = await message.voice.get_file()
 
     req_id = random.randrange(10000+1)
@@ -301,16 +347,16 @@ async def STT_REQ(message: types.Message, state: FSMContext):
     except:
         os.remove(FromPath)
         logger.error(f"An error occurred while converting a voice message from a user {message.from_user.id}")
-        return await message.reply('💢 <b>Произошла ошибка во время конвертирования, попробуйте повторить свой запрос позднее</b>', parse_mode='HTML')
+        return await message.reply(Locale.localization[bot_language]['request_failed'], parse_mode='HTML')
     
-    text_msg = ExtraTextProcess(msg=VoskSpeechRecog(wav_filepath=ToPath, lang_model=Lang_models[FullData.get('STTLanguage')]), lang=FullData.get('STTLanguage'))
+    text_msg = ExtraTextProcess(msg=VoskSpeechRecog(wav_filepath=ToPath, lang_model=Lang_models[stt_language]), lang=stt_language)
 
     os.remove(ToPath)
     os.remove(FromPath)
 
     if len(text_msg) < 3:
         logger.error(f'No speech found in a voice message from a user {message.from_user.id}')
-        return await message.reply('💢 <b>Не удалось распознать речь в данном голосовом сообщении</b>', parse_mode='HTML')
+        return await message.reply(Locale.localization[bot_language]['no_speech_found'], parse_mode='HTML')
 
     await message.reply(text_msg, parse_mode='HTML')
     logger.success(f"Performed STT request for a user {message.from_user.id}")
