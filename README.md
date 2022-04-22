@@ -58,11 +58,19 @@ pip install -r requirements.txt
 ### **Commands**
 
 The following commands are available in RantoVox:
-* **/start** - Launch a bot for your account
-* **/help** - Get an informational summary of the operating principles
-* **/setlocale** - Set language of bot's interface 
-* **/setvoice** - Set voice gender for requests (TTS)
-* **/setlang** - Set language for requests (STT)
+* **start** - Launch a bot for your account
+* **help** - Get an informational summary of the operating principles
+* **setlocale** - Set language of bot's interface 
+* **setvoice** - Set voice gender for requests (TTS)
+* **setlang** - Set language for requests (STT)
+
+
+### **Configuration file**
+The following parameters can be changed in the RantoVox configuration file:
+* Folder names that contain the language models
+* Voiceover names for each supported language
+* Names of special files required for ETP operation
+* Tumbler to enable/disable ETP
 
 
 ## Data privacy

@@ -49,37 +49,53 @@ def VoskSpeechRecog(wav_filepath, lang_model):
     return result_text
 
 def ExtraTextProcess(msg : str, lang : str):
-    msg, lang = msg[1:], lang.upper()
+    if not(config.ETP_Enabled):
+        logger.warning('ETP is disabled in the configuration file, a raw message is returned')
+        return msg
     
-    if lang == 'RUSSIAN':
-        alphabet_ru = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ'
-        morph = pymorphy2.MorphAnalyzer()
-        
-        FirstUpperList = []
-        names_data = open(os.path.join(os.path.dirname(__file__), 'ETP_materials', config.ETP_Russian_names_filename), "r", encoding='UTF-8').readlines()
-        for name in names_data:
-            FirstUpperList.append(name[:len(name)-1].lower())
-        
-        surnames_data = open(os.path.join(os.path.dirname(__file__), 'ETP_materials', config.ETP_Russian_surnames_filename), "r", encoding='UTF-8').readlines()
-        for surname in surnames_data:
-            FirstUpperList.append(surname[:len(surname)-1].lower())
+    Languages_Supported = {
+        'RUSSIAN': 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
+        'ENGLISH': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    }
 
+    msg, lang = msg[1:], lang.upper()
+    morph = pymorphy2.MorphAnalyzer()
+
+    if lang not in list(Languages_Supported.keys()):
+        logger.warning('An unknown language was requested in ETP, a raw message is returned')
+        return msg
+
+    else:
         msg_words = msg.split(' ')
+        FirstUpperList = []
+
+        if lang == 'RUSSIAN':
+            names_data = open(os.path.join(os.path.dirname(__file__), 'ETP_materials', config.ETP_Russian_names_filename), "r", encoding='UTF-8').readlines()
+            for name in names_data:
+                FirstUpperList.append(name[:len(name)-1].lower())
+            
+            surnames_data = open(os.path.join(os.path.dirname(__file__), 'ETP_materials', config.ETP_Russian_surnames_filename), "r", encoding='UTF-8').readlines()
+            for surname in surnames_data:
+                FirstUpperList.append(surname[:len(surname)-1].lower())
+
+
+        elif lang == 'ENGLISH':
+            names_data = open(os.path.join(os.path.dirname(__file__), 'ETP_materials', config.ETP_English_names_filename), "r", encoding='UTF-8').readlines()
+            for name in names_data:
+                FirstUpperList.append(name[:len(name)-1].lower())
+
+
         for w_i in range(len(msg_words)):
             word = msg_words[w_i]
             word_morphing = morph.parse(word)[0]
             
             if word_morphing.normal_form in FirstUpperList:
-                msg_words[w_i] = alphabet_ru[alphabet_ru.lower().index(word[0])] + word[1:]
+                msg_words[w_i] = word[0].upper() + word[1:]
 
-        if msg_words[0][0].lower() in alphabet_ru.lower():
-            msg_words[0] = alphabet_ru[alphabet_ru.lower().index(msg_words[0][0].lower())] + msg_words[0][1:]
+        if msg_words[0][0].lower() in Languages_Supported[lang].lower():
+            msg_words[0] = msg_words[0][0].upper() + msg_words[0][1:]
 
         return " ".join(msg_words)
-    
-    else:
-        logger.warning('An unknown language was requested, ETP returned raw message')
-        return msg
 
 
 print(f"\n\n{pyfiglet.figlet_format('RantoVox', font = 'Doom')}")
@@ -88,6 +104,7 @@ print(f"\n\n{pyfiglet.figlet_format('RantoVox', font = 'Doom')}")
 # Creating logs and loading .env
 SetLogLevel(-1)
 logger.add('RV_LOGS.log', rotation='1024 MB')
+print('Developed by Ggorets0, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot', end='\n\n')
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
@@ -119,7 +136,7 @@ for lang in Lang_models:
 
 # Cleaning old sound files if they exist
 for home_file in os.listdir(os.path.dirname(__file__)):
-    if home_file[len(home_file)-4:] == '.wav' or home_file[len(home_file)-4:] == '.ogg':
+    if home_file[len(home_file)-4:] in ['.wav', '.ogg']:
         os.remove(os.path.join(os.path.dirname(__file__), home_file))
         logger.warning(f'Old audio file was found and deleted ({home_file})')
 
@@ -131,6 +148,7 @@ all_voices = TTS.getProperty('voices')
 for voice in all_voices:
     if voice.name == config.male_voice_name:
         MaleFound = True
+        TTS.setProperty('voice', voice.id)
     elif voice.name == config.female_voice_name:
         FemaleFound = True
 if (MaleFound is False) or (FemaleFound is False):
@@ -145,9 +163,7 @@ class Cond(StatesGroup):
 @dp.message_handler(commands=['start'], commands_prefix='/')
 async def Start(message: types.Message, state: FSMContext):
     await Cond.Req.set()
-    await state.update_data(BOTLanguage="RUSSIAN")
-    await state.update_data(STTLanguage="RUSSIAN")
-    await state.update_data(VoiceGender="Male")
+    await state.update_data(BOTLanguage="RUSSIAN", STTLanguage="RUSSIAN", VoiceGender="Male")
     
     await message.answer(Locale.localization["RUSSIAN"]['start'] + '\n\n\n' + Locale.localization["ENGLISH"]['start'], parse_mode='HTML')
 
@@ -161,8 +177,7 @@ async def Help(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['setvoice'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableVoices(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    voice_gender = FullData.get("VoiceGender")
-    bot_language = FullData.get('BOTLanguage')
+    voice_gender, bot_language = FullData.get("VoiceGender"), FullData.get('BOTLanguage')
     voice_name = "Unknown"
 
     voice_choice = InlineKeyboardMarkup(row_width=1)
@@ -210,8 +225,7 @@ async def SetVoice(call: CallbackQuery, state: FSMContext):
 @dp.message_handler(commands=['setlang'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableSTTLangs(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    stt_lang = FullData.get("STTLanguage")
-    bot_language = FullData.get("BOTLanguage")
+    stt_lang, bot_language = FullData.get("STTLanguage"), FullData.get("BOTLanguage")
     stt_lang_using_now = "Unknown"
 
     lang_choice = InlineKeyboardMarkup(row_width=1)
@@ -279,23 +293,10 @@ async def SetBotLocale(call: CallbackQuery, state: FSMContext):
 @dp.message_handler(state=Cond.Req, content_types=[ContentType.TEXT])
 async def TTS_REQ(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    voice_gender = FullData.get('VoiceGender')
     bot_language = FullData.get('BOTLanguage')
     
     if '/start' in message.text:
         return await message.answer(Locale.localization[bot_language]['start_again'], parse_mode='HTML')
-
-    if voice_gender == 'Male':
-        voice_to_use = config.male_voice_name
-    elif voice_gender == 'Female':
-        voice_to_use = config.female_voice_name
-
-
-    voices = TTS.getProperty('voices')
-    for voice in voices:
-        if voice.name == voice_to_use:
-            TTS.setProperty('voice', voice.id)
-            break
 
     try:
         req_id = random.randrange(10000)
