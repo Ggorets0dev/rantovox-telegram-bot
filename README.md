@@ -25,7 +25,7 @@ RantoVox supports two voices (male and female), whose names are set in the confi
 
 ### **Extra Text Processing (ETP)**
 
-RantoVox has a special function called **ExtraTextProcess**, which introduces additional methods of processing text received from [Vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **ETP_materials** folder. 
+RantoVox has a special function called **ExtraTextProcessing**, which introduces additional methods of processing text received from [vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **ETP_materials** folder. 
 
 
 
@@ -40,8 +40,8 @@ The following steps are required for RantoVox to work correctly:
 2) Install dependencies using pip with requirements.txt
 3) Create your own **.env** file in bot folder with the **TELEGRAM_TOKEN** variable
 4) Set preferred voice names in the configuration file (you can see the available ones with [pyttsx3](https://pypi.org/project/pyttsx3/) in your system)
-5) Download latest [Vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into bot's home folder and set their's names in configuration file
-6) Download and install [FFmpeg](https://ffmpeg.org/) in your system **(don't forget to add it to PATH)**
+5) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **lang_materials** folder and set their dirnames in configuration file *(example: vosk-model-small-en-us-0.15)*
+6) Download and install [FFmpeg](https://ffmpeg.org/) in your system *(don't forget to add it to PATH)*
 
 
 ### **Cloning repository and installing requirments**
@@ -67,7 +67,7 @@ The following commands are available in RantoVox:
 
 ### **Configuration file**
 The following parameters can be changed in the RantoVox configuration file:
-* Folder names that contain the language models
+* Dirname of language models *(must be in **lang_materials** folder)*
 * Voiceover names for each supported language
 * Names of special files required for ETP operation
 * Tumbler to enable/disable ETP

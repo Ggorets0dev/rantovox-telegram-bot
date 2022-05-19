@@ -1,7 +1,7 @@
-RV_Version = '1.2.0'
+RV_Version = '1.2.1'
 
-RU_lang_model_dirname = 'vosk-model-small-ru-0.22'
-ENG_lang_model_dirname = 'vosk-model-small-en-us-0.15'
+RU_lang_model_dirname = 'vosk-model-small-ru-0.22'      # must be inside lang_materials
+ENG_lang_model_dirname = 'vosk-model-small-en-us-0.15'  # must be inside lang_materials
 
 male_voice_name = 'Aleksandr'
 female_voice_name = 'Elena'

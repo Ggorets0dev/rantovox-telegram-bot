@@ -7,6 +7,7 @@ from vosk import Model, KaldiRecognizer, SetLogLevel
 from loguru import logger
 from dotenv import load_dotenv
 import os
+import sys
 import pyttsx3
 import pyfiglet
 import subprocess
@@ -15,7 +16,10 @@ import json
 import random
 import pymorphy2
 import config
+
+sys.path.append(os.path.join(os.path.dirname(__file__), 'lang_materials'))
 import localization as Locale
+
 
 
 def VoskSpeechRecog(wav_filepath, lang_model):
@@ -48,7 +52,7 @@ def VoskSpeechRecog(wav_filepath, lang_model):
 
     return result_text
 
-def ExtraTextProcess(msg : str, lang : str):
+def ExtraTextProcessing(msg : str, lang : str):
     if not(config.ETP_Enabled):
         logger.warning('ETP is disabled in the configuration file, a raw message is returned')
         return msg
@@ -104,7 +108,7 @@ print(f"\n\n{pyfiglet.figlet_format('RantoVox', font = 'Doom')}")
 # Creating logs and loading .env
 SetLogLevel(-1)
 logger.add('RV_LOGS.log', rotation='1024 MB')
-print('Developed by Ggorets0, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot', end='\n\n')
+print(f'Developed by Ggorets0dev, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot (version: {config.RV_Version})', end='\n\n')
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
 if os.path.exists(dotenv_path):
@@ -119,13 +123,13 @@ else:
 bot = Bot(token=os.environ.get('TELEGRAM_TOKEN'))
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
-logger.success(f'Successfully logged in (version: {config.RV_Version})')
+logger.success('Successfully logged in Telegram')
 
 
 # Loading language models
 Lang_models = {
-    'RUSSIAN': config.RU_lang_model_dirname,
-    'ENGLISH': config.ENG_lang_model_dirname
+    'RUSSIAN': os.path.join(os.path.dirname(__file__), 'lang_materials', config.RU_lang_model_dirname),
+    'ENGLISH': os.path.join(os.path.dirname(__file__), 'lang_materials', config.ENG_lang_model_dirname),
 }
 
 for lang in Lang_models:
@@ -163,9 +167,9 @@ class Cond(StatesGroup):
 @dp.message_handler(commands=['start'], commands_prefix='/')
 async def Start(message: types.Message, state: FSMContext):
     await Cond.Req.set()
-    await state.update_data(BOTLanguage="RUSSIAN", STTLanguage="RUSSIAN", VoiceGender="Male")
+    await state.update_data(BOTLanguage='RUSSIAN', STTLanguage='RUSSIAN', VoiceGender='Male')
     
-    await message.answer(Locale.localization["RUSSIAN"]['start'] + '\n\n\n' + Locale.localization["ENGLISH"]['start'], parse_mode='HTML')
+    await message.answer(Locale.localization['RUSSIAN']['start'] + '\n\n\n' + Locale.localization['ENGLISH']['start'], parse_mode='HTML')
 
 
 @dp.message_handler(commands=['help'], commands_prefix='/', state=Cond.Req)
@@ -177,8 +181,8 @@ async def Help(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['setvoice'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableVoices(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    voice_gender, bot_language = FullData.get("VoiceGender"), FullData.get('BOTLanguage')
-    voice_name = "Unknown"
+    voice_gender, bot_language = FullData.get('VoiceGender'), FullData.get('BOTLanguage')
+    voice_name = 'Unknown'
 
     voice_choice = InlineKeyboardMarkup(row_width=1)
     if voice_gender == 'Male':
@@ -196,19 +200,19 @@ async def ShowAvailableVoices(message: types.Message, state: FSMContext):
 async def SetVoice(call: CallbackQuery, state: FSMContext):
     FullData = await state.get_data()
     bot_language = FullData.get('BOTLanguage')
-    new_voice_name = "Unknown"
+    new_voice_name = 'Unknown'
 
     voice_gender = call.data[:len(call.data)-2]
 
     await call.message.delete()
     if voice_gender == 'Male':
         await call.message.answer(Locale.localization[bot_language]['voice_gender_changed'].format(Locale.localization[bot_language]['male_button']), parse_mode='HTML')
-        await state.update_data(VoiceGender="Male")
+        await state.update_data(VoiceGender='Male')
         new_voice_name = config.male_voice_name
 
     elif voice_gender == 'Female':
         await call.message.answer(Locale.localization[bot_language]['voice_gender_changed'].format(Locale.localization[bot_language]['female_button']), parse_mode='HTML')
-        await state.update_data(VoiceGender="Female")
+        await state.update_data(VoiceGender='Female')
         new_voice_name = config.female_voice_name
 
     else:
@@ -225,7 +229,7 @@ async def SetVoice(call: CallbackQuery, state: FSMContext):
 @dp.message_handler(commands=['setlang'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableSTTLangs(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    stt_lang, bot_language = FullData.get("STTLanguage"), FullData.get("BOTLanguage")
+    stt_lang, bot_language = FullData.get('STTLanguage'), FullData.get('BOTLanguage')
     stt_lang_using_now = "Unknown"
 
     lang_choice = InlineKeyboardMarkup(row_width=1)
@@ -243,7 +247,7 @@ async def ShowAvailableSTTLangs(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text_contains='STTL', state=Cond.Req)
 async def SetSTTLang(call: CallbackQuery, state: FSMContext):
     FullData = await state.get_data()
-    bot_language = FullData.get("BOTLanguage")
+    bot_language = FullData.get('BOTLanguage')
 
     stt_lang = call.data[:len(call.data)-4]
 
@@ -259,8 +263,8 @@ async def SetSTTLang(call: CallbackQuery, state: FSMContext):
 @dp.message_handler(commands=['setlocale'], commands_prefix='/', state=Cond.Req)
 async def ShowAvailableLocales(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    bot_language = FullData.get("BOTLanguage")
-    bot_lang_using_now = "Unknown"
+    bot_language = FullData.get('BOTLanguage')
+    bot_lang_using_now = 'Unknown'
 
     locale_choice = InlineKeyboardMarkup(row_width=1)
     if bot_language == 'ENGLISH':
@@ -277,7 +281,7 @@ async def ShowAvailableLocales(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(text_contains='BOTL', state=Cond.Req)
 async def SetBotLocale(call: CallbackQuery, state: FSMContext):
     FullData = await state.get_data()
-    bot_language = FullData.get("BOTLanguage")
+    bot_language = FullData.get('BOTLanguage')
 
     new_bot_locale = call.data[:len(call.data)-4]
 
@@ -299,7 +303,10 @@ async def TTS_REQ(message: types.Message, state: FSMContext):
         return await message.answer(Locale.localization[bot_language]['start_again'], parse_mode='HTML')
 
     try:
-        req_id = random.randrange(10000)
+        req_id = random.randrange(10000+1)
+        while os.path.isfile(os.path.join(os.path.dirname(__file__), f'VoiceFor{message.from_user.id}_{req_id}.wav')) or os.path.isfile(os.path.join(os.path.dirname(__file__), f'VoiceFor{message.from_user.id}_{req_id}.ogg')):
+            req_id = random.randrange(10000+1)
+        
         TTS.save_to_file(message.text, f'VoiceFor{message.from_user.id}_{req_id}.wav')
         TTS.runAndWait()
     except:
@@ -328,12 +335,15 @@ async def TTS_REQ(message: types.Message, state: FSMContext):
 @dp.message_handler(state=Cond.Req, content_types=[ContentType.VOICE])
 async def STT_REQ(message: types.Message, state: FSMContext):
     FullData = await state.get_data()
-    bot_language = FullData.get('BOTLanguage')
-    stt_language = FullData.get('STTLanguage')
+    stt_language, bot_language = FullData.get('STTLanguage'), FullData.get('BOTLanguage')
 
     voice_msg = await message.voice.get_file()
 
     req_id = random.randrange(10000+1)
+
+    while os.path.isfile(os.path.join(os.path.dirname(__file__), f'VoiceFrom{message.from_user.id}_{req_id}.ogg')) or os.path.isfile(os.path.join(os.path.dirname(__file__), f'VoiceFrom{message.from_user.id}_{req_id}.wav')):
+        req_id = random.randrange(10000+1)
+
     FromPath = os.path.join(os.path.dirname(__file__), f'VoiceFrom{message.from_user.id}_{req_id}.ogg')
     ToPath = os.path.join(os.path.dirname(__file__), f'VoiceFrom{message.from_user.id}_{req_id}.wav')
     
@@ -349,7 +359,7 @@ async def STT_REQ(message: types.Message, state: FSMContext):
         logger.error(f"An error occurred while converting a voice message from a user {message.from_user.id}")
         return await message.reply(Locale.localization[bot_language]['request_failed'], parse_mode='HTML')
     
-    text_msg = ExtraTextProcess(msg=VoskSpeechRecog(wav_filepath=ToPath, lang_model=Lang_models[stt_language]), lang=stt_language)
+    text_msg = ExtraTextProcessing(msg=VoskSpeechRecog(wav_filepath=ToPath, lang_model=Lang_models[stt_language]), lang=stt_language)
 
     os.remove(ToPath)
     os.remove(FromPath)
