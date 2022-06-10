@@ -1,9 +1,13 @@
 # RantoVox Telegram Bot
 Telegram bot for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries. Languages supported: **Russian**, **English** (queries and interface).
 
-<p align='left'>
+<p align='center'>
+       <img height=400 src="RantoVox_Logo.png"/>
+</p>
+
+<p align='center'>
    <a href="https://t.me/RantoVoxBot">
-       <img height=30 src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
+       <img height=35 src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white"/>
     </a>
 </p>
 
