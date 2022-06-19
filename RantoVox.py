@@ -22,7 +22,7 @@ import localization as Locale
 
 
 
-def VoskSpeechRecog(wav_filepath, lang_model):
+def VoskSpeechRecog(wav_filepath : str, lang_model : Model) -> str:
     if not(os.path.isfile(wav_filepath)): 
         return ''
 
@@ -52,7 +52,7 @@ def VoskSpeechRecog(wav_filepath, lang_model):
 
     return result_text
 
-def ExtraTextProcessing(msg : str, lang : str):
+def ExtraTextProcessing(msg : str, lang : str) -> str:
     if not(config.ETP_Enabled):
         logger.warning('ETP is disabled in the configuration file, a raw message is returned')
         return msg
@@ -325,9 +325,10 @@ async def TTS_REQ(message: types.Message, state: FSMContext):
         os.remove(FromPath)
         logger.error(f'An error occurred while converting a voice message from a user {message.from_user.id}')
         return await message.reply(Locale.localization[bot_language]['request_failed'], parse_mode='HTML')
-    
+
     await bot.send_voice(message.chat.id, open(ToPath, 'rb'), reply_to_message_id=message.message_id)
     logger.success(f"Performed TTS request for a user {message.from_user.id}")
+
     os.remove(ToPath)
     os.remove(FromPath)
 
@@ -361,15 +362,15 @@ async def STT_REQ(message: types.Message, state: FSMContext):
     
     text_msg = ExtraTextProcessing(msg=VoskSpeechRecog(wav_filepath=ToPath, lang_model=Lang_models[stt_language]), lang=stt_language)
 
-    os.remove(ToPath)
-    os.remove(FromPath)
-
     if len(text_msg) < 3:
         logger.error(f'No speech found in a voice message from a user {message.from_user.id}')
         return await message.reply(Locale.localization[bot_language]['no_speech_found'], parse_mode='HTML')
 
     await message.reply(text_msg, parse_mode='HTML')
     logger.success(f"Performed STT request for a user {message.from_user.id}")
+
+    os.remove(ToPath)
+    os.remove(FromPath)
 
 
 if __name__=='__main__':
