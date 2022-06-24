@@ -2,7 +2,7 @@
 Telegram bot for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries. Languages supported: **Russian**, **English** (queries and interface).
 
 <p align='center'>
-       <img height=400 src="RantoVox_Logo.png"/>
+       <img height=400 src="design_materials/RantoVox_GitHub_Logo.png"/>
 </p>
 
 <p align='center'>
