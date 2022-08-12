@@ -12,8 +12,9 @@ localization = {
         "bot_locale_choice": "⚙️ Выберите язык интерфейса (Сейчас: {})",
         "bot_locale_changed": "✅ Язык интерфейса изменен на <b>{}</b>",
         "bot_locale_left": "💢 <b>Язык интерфейса не был изменен</b>",
-        "request_failed": "💢 <b>Не удалось выполнить преобразование, попробуйте повторить свой запрос позже</b>",
+        "request_failed": "💢 <b>Не удалось выполнить преобразование, попробуйте повторить свой запрос позже или проверьте, корректно ли установлен ffmpeg в системе</b>",
         "no_speech_found": "💢 <b>Не удалось распознать речь в данном голосовом сообщении</b>",
+        
         "female_button": "Женский",
         "male_button": "Мужской",
         "russian_button": "Русский",
@@ -24,17 +25,18 @@ localization = {
         "start": "🔥 Welcome to chat with the bot <b>RantoVox</b>!\n\nThis project performs TTS and SST conversions, for more information use /help",
         "start_again": "✳️ <b>RantoVox</b> is ready to receive your messages, no need to start it again",
         "help": "🔄 <b>Conversion possibilities:</b>\nText ---> Voice<i> (Send text message)</i>\nVoice ---> Text<i> (Send voice message)</i>\n\n 🔐 <b>Data privacy:</b>\n<i>Conversion is performed directly on the RantoVox host, so your data is not sent to any third-party servers for processing and is deleted without possibility of recovery immediately after your request</i>",
-        "stt_lang_choice": "⚙️ Select a language for Voice-Text queries (Now: {})",
-        "stt_lang_changed": "✅ Language for Voice-Text queries has been successfully changed to <b>{}</b>",
-        "stt_lang_left": "💢 <b>Language for Voice-Text queries has not been changed</b>",
+        "stt_lang_choice": "⚙️ Select a language for Speech-to-Text queries (Now: {})",
+        "stt_lang_changed": "✅ Language for Speech-to-Text queries has been successfully changed to <b>{}</b>",
+        "stt_lang_left": "💢 <b>Language for Speech-to-Text queries has not been changed</b>",
         "voice_gender_choice": "⚙️ Select a gender of voice (Now: {})",
         "voice_gender_changed": "✅ Voiceover has been successfully changed to <b>{}</b>",
         "voice_gender_left": "💢 <b>Sounding has not been changed</b>",
         "bot_locale_choice": "⚙️ Select the interface language (Now: {})",
         "bot_locale_changed": "✅ Interface language has been changed to <b>{}</b>",
         "bot_locale_left": "💢 <b>Interface language has not been changed</b>",
-        "request_failed": "💢 <b>Conversion failed, please try to repeat it again later</b>",
+        "request_failed": "💢 <b>Conversion failed, please try to repeat it again later or check if ffmpeg is correctly installed in the system</b>",
         "no_speech_found": "💢 <b>Failure to recognize speech in this voice message</b>",
+        
         "female_button": "Female",
         "male_button": "Male",
         "russian_button": "Russian",
@@ -44,9 +46,10 @@ localization = {
 }
 
 
-# Check for identical keys
-locale_key_group = list(localization[list(localization.keys())[0]].keys())
-for locale in localization:
-    if list(localization[locale].keys()) != locale_key_group:
-        print('ERROR: Keys are not the same for all locales')
-        exit(1)
+# Check for identical keys in all languages
+def check_locales_equivalence():
+    first_locale_keys = list(localization[list(localization.keys())[0]].keys())
+    for locale in localization:
+        if list(localization[locale].keys()) != first_locale_keys:
+            return False
+    return True

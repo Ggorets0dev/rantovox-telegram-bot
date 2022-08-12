@@ -29,7 +29,7 @@ RantoVox supports two voices (male and female), whose names are set in the confi
 
 ### **Extra Text Processing (ETP)**
 
-RantoVox has a special function called **ExtraTextProcessing**, which introduces additional methods of processing text received from [vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **ETP_materials** folder. 
+RantoVox has a special function called **extra_text_processing**, which introduces additional methods of processing text received from [vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **ETP_materials** folder. 
 
 
 
@@ -79,4 +79,4 @@ The following parameters can be changed in the RantoVox configuration file:
 
 ## Data privacy
 ---
-*RantoVox deletes all temporary files immediately after a TTS or STT request. All conversion is done on the host with the help of the libraries described above. Only user's **Telegram ID** is recorded in logs when requesting, composition of his request remains hidden to host.*
+*RantoVox deletes all temporary files immediately after a TTS or STT request. All conversion is done on the host with the help of the libraries described above. Only user's **Login** and **ID** are recorded in logs when requesting, composition of request remains hidden to host.*
