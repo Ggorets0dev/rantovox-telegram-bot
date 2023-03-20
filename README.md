@@ -48,14 +48,6 @@ The following steps are required for RantoVox to work correctly:
 6) Download and install [FFmpeg](https://ffmpeg.org/) in your system *(don't forget to add it to PATH)*
 
 
-### **Cloning repository and installing requirments**
-```
-git clone https://github.com/Ggorets0dev/RantoVoxBot.git
-cd RantoVoxBot
-pip install -r requirements.txt
-```
-
-
 ## Usage
 ---
 
