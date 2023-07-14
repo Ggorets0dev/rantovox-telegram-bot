@@ -1,4 +1,4 @@
-# RantoVox Telegram Bot
+# RantoVox (Telegram bot)
 
 Telegram bot based on Python 3.11 for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries. Languages supported: **Russian**, **English** (queries and interface).
 
@@ -32,7 +32,7 @@ RantoVox supports two voices (male and female), whose names are set in the confi
 
 ### **Extra Text Processing (ETP)**
 
-RantoVox has a special function called **extra_text_processing**, which introduces additional methods of processing text received from [vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **src/etp**. 
+RantoVox has a special function called **extra_text_processing**, which introduces additional methods of processing text received from [vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **src/etp**.
 
 ## Installation
 
@@ -42,17 +42,17 @@ RantoVox has a special function called **extra_text_processing**, which introduc
 
 The following steps are required for RantoVox to work correctly:
 
-1) Clone the repository *(download source code)*
+1) Clone the repository (download source code)
 
 2) Install dependencies using pip with requirements.txt
 
 3) Create your own **.env** file in bot folder with the **TELEGRAM_TOKEN** variable
 
-4) Set preferred voice names in the configuration file *(you can see the available ones with [pyttsx3](https://pypi.org/project/pyttsx3/) in your system, **note:** not all voices can synthesize Russian speech, additional third-party installation may be required)*
+4) Set preferred voice names in the configuration file (you can see the available ones with [pyttsx3](https://pypi.org/project/pyttsx3/) in your system, **note:** not all voices can synthesize Russian speech, additional third-party installation may be required)
 
-5) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **src/lang** and set their dirnames in configuration file *(example: vosk-model-small-en-us-0.15)*
+5) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **src/lang** and set their dirnames in configuration file (example: vosk-model-small-en-us-0.15)
 
-6) Download and install [FFmpeg](https://ffmpeg.org/) in your system *(don't forget to add it to PATH)*
+6) Download and install [FFmpeg](https://ffmpeg.org/) in your system (don't forget to add it to PATH)
 
 ### **Cloning repository and installing requirments**
 
@@ -72,7 +72,7 @@ The following commands are available in RantoVox:
 
 * **help** - Get an informational summary of the operating principles
 
-* **setlocale** - Set language of bot's interface 
+* **setlocale** - Set language of bot's interface
 
 * **setvoice** - Set voice gender for requests (TTS)
 
@@ -82,7 +82,7 @@ The following commands are available in RantoVox:
 
 The following parameters can be changed in the RantoVox configuration file:
 
-* Dirname of language models *(must be in **src/lang**)*
+* Dirname of language models (must be in **src/lang**)
 
 * Voiceover names for each supported language
 

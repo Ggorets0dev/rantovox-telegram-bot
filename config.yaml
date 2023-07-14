@@ -1,4 +1,4 @@
-VERSION: 2.0.0
+VERSION: '2.0.1'
 
 RU_LANG_MODEL_DIRNAME: vosk-model-small-ru-0.22       # must be inside src/lang
 ENG_LANG_MODEL_DIRNAME: vosk-model-small-en-us-0.15   # must be inside src/lang

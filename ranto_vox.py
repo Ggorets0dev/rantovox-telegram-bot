@@ -1,141 +1,44 @@
 '''Entry point with all code'''
 
-import json
 import os
 import random
 import subprocess
-import wave
 
-from pyfiglet import figlet_format
-from pymorphy3 import MorphAnalyzer
 import pyttsx3
-import yaml
 from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher.storage import FSMContext
 from aiogram.types import (CallbackQuery, ContentType, InlineKeyboardButton,
                            InlineKeyboardMarkup)
 from dotenv import load_dotenv
 from loguru import logger
-from vosk import KaldiRecognizer, Model, SetLogLevel
+from pyfiglet import figlet_format
+from vosk import Model, SetLogLevel
+
+from models.condition import Condition
 from src.lang.localization import LOCALIZATION, check_locales_equivalence
+from utils.config_utils import read_config
+from utils.speech_utils import recognize_speech
+from utils.text_utils import extra_text_processing
 
 
-# NOTE - Declaring a class to save the user's state
-class Condition(StatesGroup):
-    '''Describes the stage of the conversation with the bot that the user is in'''
-    Req = State()
-
-
-# NOTE - Saving the path to the working directory
+# NOTE - Saving the path to the working directory and read config
 DIRNAME = os.path.join(os.path.dirname(__file__))
+CONFIG = read_config('config.yaml')
 
 
-# NOTE - Reading the configuration file
-with open("config.yaml", "r", encoding='UTF-8') as file_read:
-    try:
-        CONFIG = yaml.safe_load(file_read)
-    except yaml.YAMLError as e:
-        raise e
-    
-
-def recognize_speech(wav_filepath: str, lang_model: Model) -> str:
-    '''Recognize speech in a wav file using the vosk model and return the text'''
-    if not(os.path.isfile(wav_filepath)): 
-        return ''
-
-    wf = wave.open(wav_filepath, 'rb')
-    recog = KaldiRecognizer(lang_model, wf.getframerate())
-
-    result_text = ''
-    last_char = False
-
-    while True:
-        data_frame = wf.readframes(wf.getnframes())
-        if len(data_frame) == 0:
-            break
-
-        elif recog.AcceptWaveform(data_frame):
-            res = json.loads(recog.Result())
-
-            if res['text'] != '':
-                result_text += f" {res['text']}"
-                last_char = False
-            elif not last_char:
-                result_text += '\n'
-                last_char = True
-
-    res = json.loads(recog.FinalResult())
-    result_text += f" {res['text']}"
-
-    return result_text
-
-def extra_text_processing(msg: str, used_lang: str) -> str:
-    '''Process additional text with the help of rules'''
-    if not(CONFIG.get('ETP_ENABLED')):
-        logger.warning('ETP is disabled in the configuration file, a raw message is returned')
-        return msg
-    
-    LANGUAGES_SUPPORTED = {
-        'RUSSIAN': 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ',
-        'ENGLISH': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    }
-
-    msg, used_lang = msg[1:], used_lang.upper()
-    MORPH = MorphAnalyzer()
-
-    if used_lang not in list(LANGUAGES_SUPPORTED.keys()):
-        logger.warning('An unknown language was requested in ETP, a raw message is returned')
-        return msg
-
-    else:
-        msg_words = msg.split(' ')
-        upper_list = []
-
-        if used_lang.upper() == 'RUSSIAN':
-            RU_NAMES_PATH = os.path.join(DIRNAME, 'src', 'etp', CONFIG.get('ETP_RUSSIAN_NAMES_FILENAME'))
-            RU_SURNAMES_PATH = os.path.join(DIRNAME, 'src', 'etp', CONFIG.get('ETP_RUSSIAN_SURNAMES_FILENAME'))
-
-            # NOTE - Adding russian names to upper case filter
-            with open(RU_NAMES_PATH, 'r', encoding='UTF-8') as file_r:
-                for line in file_r:
-                    upper_list.append(line.replace('\n', ''))
-            
-            # NOTE - Adding russian surnames to upper case filter
-            with open(RU_SURNAMES_PATH, 'r', encoding='UTF-8') as file_r:
-                for line in file_r:
-                    upper_list.append(line.replace('\n', ''))
-
-        elif used_lang.upper() == 'ENGLISH':
-            ENG_NAMES_PATH = os.path.join(DIRNAME, 'src', 'etp', CONFIG.get('ETP_ENGLISH_NAMES_FILENAME'))
-
-            # NOTE - Adding russian names to upper case filter
-            with open(ENG_NAMES_PATH, 'r', encoding='UTF-8') as file_r:
-                for line in file_r:
-                    upper_list.append(line.replace('\n', ''))
-
-
-        for word_inx, word in enumerate(msg_words):
-            word_morphing = MORPH.parse(word)[0]
-            
-            if word_morphing.normal_form in upper_list:
-                msg_words[word_inx] = word.capitalize()
-
-        if msg_words[0][0].lower() in LANGUAGES_SUPPORTED[used_lang].lower():
-            msg_words[0] = msg_words[0].capitalize()
-
-        return " ".join(msg_words)
-
-
+# NOTE - Display software logo
 print(f"\n\n{figlet_format('RantoVox', font = 'Doom')}")
 
 
-# NOTE - Creating logs and loading .env
+# SECTION - Changing log settings
 SetLogLevel(-1)
 logger.add('LOGS.log', rotation='512 MB')
 print(f"Developed by Ggorets0dev, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot (version: {CONFIG.get('VERSION')})", end='\n\n')
+# !SECTION
 
+
+# SECTION - Loading .env
 dotenv_path = os.path.join(DIRNAME, '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
@@ -143,16 +46,18 @@ else:
     logger.error('Could not find environment file in home directory (.env)')
     logger.warning('It is not possible to work without .env file, because the TELEGRAM_TOKEN variable must be declared inside the file for the bot to work')
     exit(1)
+# !SECTION
 
 
-# NOTE - Sign in to Telegram
+# SECTION - Sign in to Telegram
 bot = Bot(token=os.environ.get('TELEGRAM_TOKEN'))
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 logger.success('Successfully logged in Telegram')
+# !SECTION
 
 
-# NOTE - Check if the keys of the languages are the same and load language models
+# SECTION - Check if the keys of the languages are the same and load language models
 if not check_locales_equivalence():
     logger.error('A line mismatch is detected in the connected languages')
     exit(1)
@@ -167,18 +72,19 @@ else:
         logger.info(f'{lang} language model is loading into memory, it will take some time...')
         lang_models[lang] = Model(os.path.join(DIRNAME, lang_models[lang]))
         logger.success(f'{lang} language model is loaded successfully')
+# !SECTION
 
 
-# NOTE - Cleaning old sound files if they exist
+# SECTION - Cleaning old sound files if they exist
 for home_file in os.listdir(DIRNAME):
     if home_file[len(home_file)-4:] in ['.wav', '.ogg']:
         os.remove(os.path.join(DIRNAME, home_file))
         logger.warning(f'Old audio file was found and deleted ({home_file})')
+# !SECTION
 
 
-# NOTE - TTS module initialization, trying to find the voices in the system that are specified in the config file
+# SECTION - TTS module initialization, trying to find the voices in the system that are specified in the config file
 TTS_ENGINE = pyttsx3.init()
-
 male_found, female_found = False, False
 all_voices = TTS_ENGINE.getProperty('voices')
 for voice in all_voices:
@@ -190,8 +96,10 @@ for voice in all_voices:
 if (male_found is False) or (female_found is False):
     logger.error('Failed to find by name some voices specified in the configuration file')
     exit(1)
+# !SECTION
 
 
+# SECTION - handling user cmds from telegram
 @dp.message_handler(commands=['start'], commands_prefix='/')
 async def start(message: types.Message, state: FSMContext):
     '''Start a conversation with the bot for the user'''
@@ -210,7 +118,6 @@ async def help(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['setvoice'], commands_prefix='/', state=Condition.Req)
 async def show_available_voices(message: types.Message, state: FSMContext):
     '''Show available gender of voice'''
-
     full_data = await state.get_data()
     voice_gender, bot_language = full_data.get('voice_gender'), full_data.get('bot_language')
     voice_name = None
@@ -260,7 +167,6 @@ async def set_voice_gender(call: CallbackQuery, state: FSMContext):
 @dp.message_handler(commands=['setlang'], commands_prefix='/', state=Condition.Req)
 async def show_available_stt_langs(message: types.Message, state: FSMContext):
     '''Show the user a list of languages available for recognition'''
-
     full_data = await state.get_data()
     stt_lang, bot_language = full_data.get('STTLanguage'), full_data.get('bot_language')
     stt_lang_using_now = None
@@ -417,8 +323,11 @@ async def perform_stt(message: types.Message, state: FSMContext):
     else:
         logger.success(f"Performed STT request for a user {message.from_user.id}")
 
-    os.remove(TO_PATH)
-    os.remove(FROM_PATH)
+    if os.path.isfile(TO_PATH):
+        os.remove(TO_PATH)
+    if os.path.isfile(TO_PATH):
+        os.remove(FROM_PATH)
+# !SECTION
 
 
 if __name__=='__main__':
