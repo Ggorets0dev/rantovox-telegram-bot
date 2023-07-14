@@ -1,4 +1,6 @@
-localization = {
+'''Vocabulary with localization of interface'''
+
+LOCALIZATION = {
     "RUSSIAN": {
         "start": "🔥 Добро пожаловать в чат с ботом <b>RantoVox</b>!\n\nДанный проект выполняет запросы конвертирования TTS и SST, для более подробной информации используйте /help",
         "start_again": "✳️ <b>RantoVox</b> уже готов принимать ваши сообщения, повторный запуск не требуется",
@@ -46,10 +48,12 @@ localization = {
 }
 
 
-# Check for identical keys in all languages
-def check_locales_equivalence():
-    first_locale_keys = list(localization[list(localization.keys())[0]].keys())
-    for locale in localization:
-        if list(localization[locale].keys()) != first_locale_keys:
+# NOTE - Check for identical keys in all languages
+def check_locales_equivalence() -> bool:
+    '''Check if the keys in the languages match (in order)'''
+    
+    first_locale_keys = list(LOCALIZATION[list(LOCALIZATION.keys())[0]].keys())
+    for locale in LOCALIZATION:
+        if list(LOCALIZATION[locale].keys()) != first_locale_keys:
             return False
     return True

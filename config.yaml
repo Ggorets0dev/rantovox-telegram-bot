@@ -1,0 +1,14 @@
+VERSION: 2.0.0
+
+RU_LANG_MODEL_DIRNAME: vosk-model-small-ru-0.22       # must be inside src/lang
+ENG_LANG_MODEL_DIRNAME: vosk-model-small-en-us-0.15   # must be inside src/lang
+
+MALE_VOICE_NAME: Aleksandr                            # must be installed in system
+FEMALE_VOICE_NAME: Elena                              # must be installed in system
+
+MAX_REQUEST_INDEX: 1000
+
+ETP_ENABLED: True
+ETP_RUSSIAN_NAMES_FILENAME: russian_names.txt         # must be inside src/etp
+ETP_RUSSIAN_SURNAMES_FILENAME: russian_surnames.txt   # must be inside src/etp
+ETP_ENGLISH_NAMES_FILENAME: english_names.txt         # must be inside src/etp

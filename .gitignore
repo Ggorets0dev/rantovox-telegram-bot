@@ -1,4 +1,4 @@
-\env
+\venv
 .env
 LOGS.log
 \vosk-model-small-en-us-0.15
