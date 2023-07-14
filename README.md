@@ -54,8 +54,6 @@ The following steps are required for RantoVox to work correctly:
 
 6) Download and install [FFmpeg](https://ffmpeg.org/) in your system *(don't forget to add it to PATH)*
 
-
-<<<<<<< HEAD
 ### **Cloning repository and installing requirments**
 
 ```bash
@@ -64,8 +62,6 @@ cd RantoVoxBot
 pip install -r requirements.txt
 ```
 
-=======
->>>>>>> cc354cc3e0f7e5f465c0415053c9b9e2671cff98
 ## Usage
 
 ### **Commands**
@@ -95,10 +91,5 @@ The following parameters can be changed in the RantoVox configuration file:
 * Tumbler to enable/disable ETP
 
 ## Data privacy
-<<<<<<< HEAD
 
 RantoVox deletes all temporary files immediately after a TTS or STT request. All conversion is done on the host with the help of the libraries described above. Only user's **Login** and **ID** are recorded in logs when requesting, composition of request remains hidden to host.
-=======
----
-*RantoVox deletes all temporary files immediately after a TTS or STT request. All conversion is done on the host with the help of the libraries described above. Only user's **Login** and **ID** are recorded in logs when requesting, composition of request remains hidden to host.*
->>>>>>> cc354cc3e0f7e5f465c0415053c9b9e2671cff98
