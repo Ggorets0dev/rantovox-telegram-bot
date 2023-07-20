@@ -1,5 +1,8 @@
+#pylint: disable=invalid-name, line-too-long, redefined-builtin, trailing-whitespace
+
 '''Entry point with all code'''
 
+import json
 import os
 import random
 import subprocess
@@ -16,40 +19,50 @@ from pyfiglet import figlet_format
 from vosk import Model, SetLogLevel
 
 from models.condition import Condition
-from src.lang.localization import LOCALIZATION, check_locales_equivalence
-from utils.config_utils import read_config
 from utils.speech_utils import recognize_speech
 from utils.text_utils import extra_text_processing
 
 
-# NOTE - Saving the path to the working directory and read config
-DIRNAME = os.path.join(os.path.dirname(__file__))
-CONFIG = read_config('config.yaml')
+VERSION = '2.1.0'
+CWD = os.path.join(os.path.dirname(__file__))
+MAX_REQUEST_INDEX = int(os.environ.get('MAX_REQUEST_INDEX')) if os.environ.get('MAX_REQUEST_INDEX') else 1000
 
 
-# NOTE - Display software logo
-print(f"\n\n{figlet_format('RantoVox', font = 'Doom')}")
+# SECTION - Download localization file
+LOCALIZATION = None
+LOCALIZATION_PATH = os.path.join(CWD, 'src', 'lang', 'localization.json')
+with open(LOCALIZATION_PATH, 'r', encoding='UTF-8') as file_read:
+    LOCALIZATION = json.load(file_read)
+# !SECTION 
 
 
-# SECTION - Changing log settings
+# NOTE - Changing log settings
 SetLogLevel(-1)
-logger.add('LOGS.log', rotation='512 MB')
-print(f"Developed by Ggorets0dev, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot (version: {CONFIG.get('VERSION')})", end='\n\n')
-# !SECTION
+logger.add('LOGS.log', rotation='256 MB')
+
+
+# NOTE - Display logo and dev info
+print(f"\n\n{figlet_format('RantoVox', font = 'Doom')}")
+print(f"Developed by Ggorets0dev, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot (version: {VERSION})", end='\n\n')
 
 
 # SECTION - Loading .env
-dotenv_path = os.path.join(DIRNAME, '.env')
+dotenv_path = os.path.join(CWD, '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 else:
     logger.error('Could not find environment file in home directory (.env)')
-    logger.warning('It is not possible to work without .env file, because the TELEGRAM_TOKEN variable must be declared inside the file for the bot to work')
     exit(1)
 # !SECTION
 
 
 # SECTION - Sign in to Telegram
+TOKEN = os.environ.get('TELEGRAM_TOKEN')
+
+if not TOKEN:
+    logger.error('Token for accessing Telegram was not found in the environment file')
+    exit(1)
+
 bot = Bot(token=os.environ.get('TELEGRAM_TOKEN'))
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
@@ -57,28 +70,30 @@ logger.success('Successfully logged in Telegram')
 # !SECTION
 
 
-# SECTION - Check if the keys of the languages are the same and load language models
-if not check_locales_equivalence():
-    logger.error('A line mismatch is detected in the connected languages')
-    exit(1)
-else:
-    # NOTE - Loading language models
-    lang_models = {
-        'RUSSIAN': os.path.join(DIRNAME, 'src', 'lang', CONFIG.get('RU_LANG_MODEL_DIRNAME')),
-        'ENGLISH': os.path.join(DIRNAME, 'src', 'lang', CONFIG.get('ENG_LANG_MODEL_DIRNAME')),
-    }
+# SECTION - Load language models
+RU_MODEL_DIRNAME = os.environ.get('RU_LANG_MODEL_DIRNAME')
+ENG_MODEL_DIRNAME = os.environ.get('RU_LANG_MODEL_DIRNAME')
 
-    for lang in lang_models:
-        logger.info(f'{lang} language model is loading into memory, it will take some time...')
-        lang_models[lang] = Model(os.path.join(DIRNAME, lang_models[lang]))
-        logger.success(f'{lang} language model is loaded successfully')
+if not RU_MODEL_DIRNAME or not ENG_MODEL_DIRNAME:
+    logger.error('Cannot find language model folder names in the environment file, check the name of both models')
+    exit(1)
+
+lang_models = {
+    'RUSSIAN': os.path.join(CWD, 'src', 'lang', RU_MODEL_DIRNAME),
+    'ENGLISH': os.path.join(CWD, 'src', 'lang', ENG_MODEL_DIRNAME),
+}
+
+for lang in lang_models:
+    logger.info(f'{lang} language model is loading into memory, it will take some time...')
+    lang_models[lang] = Model(os.path.join(CWD, lang_models[lang]))
+    logger.success(f'{lang} language model is loaded successfully')
 # !SECTION
 
 
 # SECTION - Cleaning old sound files if they exist
-for home_file in os.listdir(DIRNAME):
+for home_file in os.listdir(CWD):
     if home_file[len(home_file)-4:] in ['.wav', '.ogg']:
-        os.remove(os.path.join(DIRNAME, home_file))
+        os.remove(os.path.join(CWD, home_file))
         logger.warning(f'Old audio file was found and deleted ({home_file})')
 # !SECTION
 
@@ -86,15 +101,19 @@ for home_file in os.listdir(DIRNAME):
 # SECTION - TTS module initialization, trying to find the voices in the system that are specified in the config file
 TTS_ENGINE = pyttsx3.init()
 male_found, female_found = False, False
-all_voices = TTS_ENGINE.getProperty('voices')
-for voice in all_voices:
-    if voice.name == CONFIG.get('MALE_VOICE_NAME'):
+ALL_VOICES = TTS_ENGINE.getProperty('voices')
+for voice in ALL_VOICES:
+    if voice.name == os.environ.get('MALE_VOICE_NAME'):
         male_found = True
         TTS_ENGINE.setProperty('voice', voice.id)
-    elif voice.name == CONFIG.get('FEMALE_VOICE_NAME'):
+    elif voice.name == os.environ.get('FEMALE_VOICE_NAME'):
         female_found = True
 if (male_found is False) or (female_found is False):
-    logger.error('Failed to find by name some voices specified in the configuration file')
+    logger.error('Failed to find by name some voices specified in the environment file, familiarize yourself with the available ones below and specify one of them')
+
+    for vc in ALL_VOICES:
+        print(vc.name)
+
     exit(1)
 # !SECTION
 
@@ -124,12 +143,12 @@ async def show_available_voices(message: types.Message, state: FSMContext):
 
     voice_choice = InlineKeyboardMarkup(row_width=1)
     if voice_gender == 'male':
-        voice_choice.insert(InlineKeyboardButton(text=f"👩 {LOCALIZATION[bot_language]['female_button']}", callback_data='femaleVG'))
+        voice_choice.insert(InlineKeyboardButton(text=f"👩 {LOCALIZATION[bot_language]['female_button']}", callback_data='female_vg'))
         voice_name = LOCALIZATION[bot_language]['male_button']
     elif voice_gender == 'female':
-        voice_choice.insert(InlineKeyboardButton(text=f"👨 {LOCALIZATION[bot_language]['male_button']}", callback_data='maleVG'))
+        voice_choice.insert(InlineKeyboardButton(text=f"👨 {LOCALIZATION[bot_language]['male_button']}", callback_data='male_vg'))
         voice_name = LOCALIZATION[bot_language]['female_button']
-    voice_choice.insert(InlineKeyboardButton(text=f"💢 {LOCALIZATION[bot_language]['cancel_button']}", callback_data='CancelVG'))
+    voice_choice.insert(InlineKeyboardButton(text=f"💢 {LOCALIZATION[bot_language]['cancel_button']}", callback_data='cancel_vg'))
 
     await message.answer(text=LOCALIZATION[bot_language]['voice_gender_choice'].format(voice_name), reply_markup=voice_choice, parse_mode='HTML')
 
@@ -147,20 +166,20 @@ async def set_voice_gender(call: CallbackQuery, state: FSMContext):
     if voice_gender == 'male':
         await call.message.answer(LOCALIZATION[bot_language]['voice_gender_changed'].format(LOCALIZATION[bot_language]['male_button']), parse_mode='HTML')
         await state.update_data(voice_gender='male')
-        new_voice_name = CONFIG.get('MALE_VOICE_NAME')
+        new_voice_name = os.environ.get('MALE_VOICE_NAME')
 
     elif voice_gender == 'female':
         await call.message.answer(LOCALIZATION[bot_language]['voice_gender_changed'].format(LOCALIZATION[bot_language]['female_button']), parse_mode='HTML')
         await state.update_data(voice_gender='female')
-        new_voice_name = CONFIG.get('FEMALE_VOICE_NAME')
+        new_voice_name = os.environ.get('FEMALE_VOICE_NAME')
 
     else:
         return await call.message.answer(LOCALIZATION[bot_language]['voice_gender_left'], parse_mode='HTML')
 
     AVAILABLE_VOICES = TTS_ENGINE.getProperty('voices')
-    for voice in AVAILABLE_VOICES:
-        if voice.name == new_voice_name:
-            TTS_ENGINE.setProperty('voice', voice.id)
+    for vc in AVAILABLE_VOICES:
+        if vc.name == new_voice_name:
+            TTS_ENGINE.setProperty('voice', vc.id)
             break
 
 
@@ -198,7 +217,7 @@ async def set_stt_lang(call: CallbackQuery, state: FSMContext):
 
     else:
         return await call.message.answer(text=LOCALIZATION[bot_language]['stt_lang_left'], parse_mode='HTML')
-    
+
 
 @dp.message_handler(commands=['setlocale'], commands_prefix='/', state=Condition.Req)
 async def show_available_locales(message: types.Message, state: FSMContext):
@@ -248,9 +267,9 @@ async def perform_tts(message: types.Message, state: FSMContext):
         return await message.answer(LOCALIZATION[bot_language]['start_again'], parse_mode='HTML')
 
     try:
-        req_id = random.randrange(CONFIG.get('MAX_REQUEST_INDEX') + 1)
-        while os.path.isfile(os.path.join(DIRNAME, f'VoiceFor{message.from_user.id}_{req_id}.wav')) or os.path.isfile(os.path.join(DIRNAME, f'VoiceFor{message.from_user.id}_{req_id}.ogg')):
-            req_id = random.randrange(CONFIG.get('MAX_REQUEST_INDEX') + 1)
+        req_id = random.randrange(MAX_REQUEST_INDEX + 1)
+        while os.path.isfile(os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.wav')) or os.path.isfile(os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.ogg')):
+            req_id = random.randrange(MAX_REQUEST_INDEX + 1)
         
         TTS_ENGINE.save_to_file(message.text, f'VoiceFor{message.from_user.id}_{req_id}.wav')
         TTS_ENGINE.runAndWait()
@@ -258,8 +277,8 @@ async def perform_tts(message: types.Message, state: FSMContext):
         logger.error(f'Failed to convert text to voice for the user {message.from_user.id}')
         return await message.reply(LOCALIZATION[bot_language]['request_failed'], parse_mode='HTML')
     
-    FROM_PATH = os.path.join(DIRNAME, f'VoiceFor{message.from_user.id}_{req_id}.wav')
-    TO_PATH = os.path.join(DIRNAME, f'VoiceFor{message.from_user.id}_{req_id}.ogg')
+    FROM_PATH = os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.wav')
+    TO_PATH = os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.ogg')
 
     # NOTE - FFMPEG WAV -> OGG
     try:
@@ -291,12 +310,12 @@ async def perform_stt(message: types.Message, state: FSMContext):
 
     voice_msg = await message.voice.get_file()
 
-    req_id = random.randrange(CONFIG.get('MAX_REQUEST_INDEX')  + 1)
-    while os.path.isfile(os.path.join(DIRNAME, f'VoiceFrom{message.from_user.id}_{req_id}.ogg')) or os.path.isfile(os.path.join(DIRNAME, f'VoiceFrom{message.from_user.id}_{req_id}.wav')):
-        req_id = random.randrange(CONFIG.get('MAX_REQUEST_INDEX')  + 1)
+    req_id = random.randrange(MAX_REQUEST_INDEX  + 1)
+    while os.path.isfile(os.path.join(CWD, f'VoiceFrom{message.from_user.id}_{req_id}.ogg')) or os.path.isfile(os.path.join(CWD, f'VoiceFrom{message.from_user.id}_{req_id}.wav')):
+        req_id = random.randrange(MAX_REQUEST_INDEX + 1)
 
-    FROM_PATH = os.path.join(DIRNAME, f'VoiceFrom{message.from_user.id}_{req_id}.ogg')
-    TO_PATH = os.path.join(DIRNAME, f'VoiceFrom{message.from_user.id}_{req_id}.wav')
+    FROM_PATH = os.path.join(CWD, f'VoiceFrom{message.from_user.id}_{req_id}.ogg')
+    TO_PATH = os.path.join(CWD, f'VoiceFrom{message.from_user.id}_{req_id}.wav')
     
     await bot.download_file(file_path=voice_msg.file_path, destination=FROM_PATH)
     
@@ -325,7 +344,7 @@ async def perform_stt(message: types.Message, state: FSMContext):
 
     if os.path.isfile(TO_PATH):
         os.remove(TO_PATH)
-    if os.path.isfile(TO_PATH):
+    if os.path.isfile(FROM_PATH):
         os.remove(FROM_PATH)
 # !SECTION
 

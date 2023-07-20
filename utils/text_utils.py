@@ -1,21 +1,21 @@
+#pylint: disable=invalid-name, line-too-long, trailing-whitespace
+
 '''Functions for working with text'''
 
-from os import path
+import os
 
 from loguru import logger
 from pymorphy3 import MorphAnalyzer
-
-from utils.config_utils import read_config
 
 
 def extra_text_processing(msg: str, used_lang: str) -> str:
     '''Process additional text with the help of rules'''
 
-    DIRNAME = path.dirname(__file__)
-    CONFIG = read_config('config.yaml')
+    CWD = os.path.dirname(__file__)
+    IS_ETP_ENABLED = os.environ.get('ETP_ENABLED')
 
-    if not(CONFIG.get('ETP_ENABLED')):
-        logger.warning('ETP is disabled in the configuration file, a raw message is returned')
+    if IS_ETP_ENABLED and IS_ETP_ENABLED == 'False':
+        logger.warning('ETP is disabled in the environment file, a raw message is returned')
         return msg
     
     LANGUAGES_SUPPORTED = {
@@ -26,7 +26,7 @@ def extra_text_processing(msg: str, used_lang: str) -> str:
     msg, used_lang = msg[1:], used_lang.upper()
     MORPH = MorphAnalyzer()
 
-    if used_lang not in list(LANGUAGES_SUPPORTED.keys()):
+    if used_lang not in LANGUAGES_SUPPORTED:
         logger.warning('An unknown language was requested in ETP, a raw message is returned')
         return msg
 
@@ -35,8 +35,8 @@ def extra_text_processing(msg: str, used_lang: str) -> str:
         upper_list = []
 
         if used_lang.upper() == 'RUSSIAN':
-            RU_NAMES_PATH = path.join(DIRNAME, '..', 'src', 'etp', CONFIG.get('ETP_RUSSIAN_NAMES_FILENAME'))
-            RU_SURNAMES_PATH = path.join(DIRNAME, '..', 'src', 'etp', CONFIG.get('ETP_RUSSIAN_SURNAMES_FILENAME'))
+            RU_NAMES_PATH = os.path.join(CWD, '..', 'src', 'etp', 'russian_names.txt')
+            RU_SURNAMES_PATH = os.path.join(CWD, '..', 'src', 'etp', 'russian_surnames.txt')
 
             # NOTE - Adding russian names to upper case filter
             with open(RU_NAMES_PATH, 'r', encoding='UTF-8') as file_r:
@@ -49,7 +49,7 @@ def extra_text_processing(msg: str, used_lang: str) -> str:
                     upper_list.append(line.replace('\n', ''))
 
         elif used_lang.upper() == 'ENGLISH':
-            ENG_NAMES_PATH = path.join(DIRNAME, 'src', 'etp', CONFIG.get('ETP_ENGLISH_NAMES_FILENAME'))
+            ENG_NAMES_PATH = os.path.join(CWD, 'src', 'etp', 'english_surnames')
 
             # NOTE - Adding russian names to upper case filter
             with open(ENG_NAMES_PATH, 'r', encoding='UTF-8') as file_r:
@@ -67,3 +67,4 @@ def extra_text_processing(msg: str, used_lang: str) -> str:
             msg_words[0] = msg_words[0].capitalize()
 
         return " ".join(msg_words)
+    

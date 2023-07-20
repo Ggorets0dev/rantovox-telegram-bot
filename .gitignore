@@ -4,3 +4,5 @@ LOGS.log
 \vosk-model-small-en-us-0.15
 \vosk-model-small-ru-0.22
 \__pycache__
+VoiceFor*
+VoiceFrom*

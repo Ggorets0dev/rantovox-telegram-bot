@@ -1,3 +1,5 @@
+#pylint: disable=invalid-name, line-too-long, trailing-whitespace
+
 '''Functions for working with speech'''
 
 import json

@@ -1,6 +1,4 @@
-'''Vocabulary with localization of interface'''
-
-LOCALIZATION = {
+{
     "RUSSIAN": {
         "start": "🔥 Добро пожаловать в чат с ботом <b>RantoVox</b>!\n\nДанный проект выполняет запросы конвертирования TTS и SST, для более подробной информации используйте /help",
         "start_again": "✳️ <b>RantoVox</b> уже готов принимать ваши сообщения, повторный запуск не требуется",
@@ -14,7 +12,7 @@ LOCALIZATION = {
         "bot_locale_choice": "⚙️ Выберите язык интерфейса (Сейчас: {})",
         "bot_locale_changed": "✅ Язык интерфейса изменен на <b>{}</b>",
         "bot_locale_left": "💢 <b>Язык интерфейса не был изменен</b>",
-        "request_failed": "💢 <b>Не удалось выполнить преобразование, попробуйте повторить свой запрос позже или проверьте, корректно ли установлен ffmpeg в системе</b>",
+        "request_failed": "💢 <b>Не удалось выполнить преобразование, попробуйте повторить свой запрос позже</b>",
         "no_speech_found": "💢 <b>Не удалось распознать речь в данном голосовом сообщении</b>",
         
         "female_button": "Женский",
@@ -36,7 +34,7 @@ LOCALIZATION = {
         "bot_locale_choice": "⚙️ Select the interface language (Now: {})",
         "bot_locale_changed": "✅ Interface language has been changed to <b>{}</b>",
         "bot_locale_left": "💢 <b>Interface language has not been changed</b>",
-        "request_failed": "💢 <b>Conversion failed, please try to repeat it again later or check if ffmpeg is correctly installed in the system</b>",
+        "request_failed": "💢 <b>Conversion failed, please try to repeat it again later</b>",
         "no_speech_found": "💢 <b>Failure to recognize speech in this voice message</b>",
         
         "female_button": "Female",
@@ -46,14 +44,3 @@ LOCALIZATION = {
         "cancel_button": "Cancel"
     }
 }
-
-
-# NOTE - Check for identical keys in all languages
-def check_locales_equivalence() -> bool:
-    '''Check if the keys in the languages match (in order)'''
-    
-    first_locale_keys = list(LOCALIZATION[list(LOCALIZATION.keys())[0]].keys())
-    for locale in LOCALIZATION:
-        if list(LOCALIZATION[locale].keys()) != first_locale_keys:
-            return False
-    return True
