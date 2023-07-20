@@ -23,7 +23,7 @@ from utils.speech_utils import recognize_speech
 from utils.text_utils import extra_text_processing
 
 
-VERSION = '2.1.0'
+VERSION = '2.2.0'
 CWD = os.path.join(os.path.dirname(__file__))
 MAX_REQUEST_INDEX = int(os.environ.get('MAX_REQUEST_INDEX')) if os.environ.get('MAX_REQUEST_INDEX') else 1000
 
@@ -50,9 +50,6 @@ print(f"Developed by Ggorets0dev, original GitHub page: https://github.com/Ggore
 dotenv_path = os.path.join(CWD, '.env')
 if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
-else:
-    logger.error('Could not find environment file in home directory (.env)')
-    exit(1)
 # !SECTION
 
 
@@ -60,7 +57,7 @@ else:
 TOKEN = os.environ.get('TELEGRAM_TOKEN')
 
 if not TOKEN:
-    logger.error('Token for accessing Telegram was not found in the environment file')
+    logger.error('Token for accessing Telegram was not found in the environment variables')
     exit(1)
 
 bot = Bot(token=os.environ.get('TELEGRAM_TOKEN'))
@@ -75,7 +72,7 @@ RU_MODEL_DIRNAME = os.environ.get('RU_LANG_MODEL_DIRNAME')
 ENG_MODEL_DIRNAME = os.environ.get('RU_LANG_MODEL_DIRNAME')
 
 if not RU_MODEL_DIRNAME or not ENG_MODEL_DIRNAME:
-    logger.error('Cannot find language model folder names in the environment file, check the name of both models')
+    logger.error('Cannot find language model folder names in the environment variables, check the name of both models')
     exit(1)
 
 lang_models = {
@@ -109,7 +106,7 @@ for voice in ALL_VOICES:
     elif voice.name == os.environ.get('FEMALE_VOICE_NAME'):
         female_found = True
 if (male_found is False) or (female_found is False):
-    logger.error('Failed to find by name some voices specified in the environment file, familiarize yourself with the available ones below and specify one of them')
+    logger.error('Failed to find by name some voices specified in the environment variables, familiarize yourself with the available ones below and specify one of them')
 
     for vc in ALL_VOICES:
         print(vc.name)
@@ -268,37 +265,29 @@ async def perform_tts(message: types.Message, state: FSMContext):
 
     try:
         req_id = random.randrange(MAX_REQUEST_INDEX + 1)
-        while os.path.isfile(os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.wav')) or os.path.isfile(os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.ogg')):
+        while os.path.isfile(os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.ogg')):
             req_id = random.randrange(MAX_REQUEST_INDEX + 1)
         
-        TTS_ENGINE.save_to_file(message.text, f'VoiceFor{message.from_user.id}_{req_id}.wav')
+        FILENAME = f'VoiceFor{message.from_user.id}_{req_id}.ogg'
+
+        TTS_ENGINE.save_to_file(message.text, FILENAME)
         TTS_ENGINE.runAndWait()
-    except:
+    
+    except Exception:
         logger.error(f'Failed to convert text to voice for the user {message.from_user.id}')
         return await message.reply(LOCALIZATION[bot_language]['request_failed'], parse_mode='HTML')
     
-    FROM_PATH = os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.wav')
-    TO_PATH = os.path.join(CWD, f'VoiceFor{message.from_user.id}_{req_id}.ogg')
+    VOICE_PATH = os.path.join(CWD, FILENAME)
 
-    # NOTE - FFMPEG WAV -> OGG
-    try:
-        cmd = f'ffmpeg -i {FROM_PATH} -acodec libvorbis {TO_PATH}'
-        DEVNULL = os.open(os.devnull, os.O_WRONLY)
-        subprocess.run(cmd,stdout=DEVNULL,stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-    except:
-        os.remove(FROM_PATH)
-        logger.error(f'An error occurred while converting a voice message from a user {message.from_user.id}, check if ffmpeg is correctly installed in the system')
-        return await message.reply(LOCALIZATION[bot_language]['request_failed'], parse_mode='HTML')
-
-    await bot.send_voice(message.chat.id, open(TO_PATH, 'rb'), reply_to_message_id=message.message_id)
+    await bot.send_voice(message.chat.id, open(VOICE_PATH, 'rb'), reply_to_message_id=message.message_id)
     
-    if (message.from_user.username):
+    if message.from_user.username:
         logger.success(f"Performed TTS request for a user {message.from_user.username}#{message.from_user.id}")
     else:
         logger.success(f"Performed TTS request for a user {message.from_user.id}")
 
-    os.remove(TO_PATH)
-    os.remove(FROM_PATH)
+    if os.path.isfile(VOICE_PATH):
+        os.remove(VOICE_PATH)
 
 
 @dp.message_handler(state=Condition.Req, content_types=[ContentType.VOICE])
@@ -321,7 +310,7 @@ async def perform_stt(message: types.Message, state: FSMContext):
     
     # NOTE - FFMPEG OGG -> WAV
     try:
-        cmd = f'ffmpeg -i {FROM_PATH} -acodec pcm_s16le {TO_PATH}'
+        cmd = f'static_ffmpeg -i {FROM_PATH} -acodec pcm_s16le {TO_PATH}'
         DEVNULL = os.open(os.devnull, os.O_WRONLY)
         subprocess.run(cmd,stdout=DEVNULL,stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
     except:

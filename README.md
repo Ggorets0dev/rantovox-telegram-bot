@@ -48,8 +48,6 @@ The following steps are required for RantoVox to work correctly:
 
 4) Create your own **.env** file in root folder with variables described in **Environment file** section.
 
-5) Download and install [FFmpeg](https://ffmpeg.org/) in your system (don't forget to add it to PATH)
-
 ### **Cloning repository and installing requirements**
 
 ```bash
