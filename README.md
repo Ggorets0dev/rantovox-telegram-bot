@@ -26,11 +26,11 @@ STT and TTS queries are performed using the following libraries:
   
 * [Pyttsx3](https://pypi.org/project/pyttsx3/) (TTS)
 
-RantoVox supports two voices (male and female), whose names are set in the configuration file.
+Bot supports two voices (male and female), whose names are set in the configuration file.
 
 ### **Extra Text Processing (ETP)**
 
-RantoVox has a special function called **extra_text_processing**, which introduces additional methods of processing text received from [Vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **src/etp**.
+Bot has a special function called **extra_text_processing**, which introduces additional methods of processing text received from [Vosk](https://pypi.org/project/vosk/). By going through it, the text can be made more human and correct in terms of writing. The materials required for this function are stored strictly in the **src/etp**.
 
 ## Installation
 
@@ -44,15 +44,15 @@ The following steps are required for RantoVox to work correctly:
 
 2) Install dependencies using pip with requirements.txt
 
-3) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **src/lang**
+3) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **src/lang** (You can use `make download` to automatically download and post, requires *curl* and *tar*)
 
 4) Create your own **.env** file in root folder with variables described in **Environment file** section.
 
 ### **Cloning repository and installing requirements**
 
 ```bash
-git clone https://github.com/Ggorets0dev/RantoVoxBot.git
-cd RantoVoxBot
+git clone https://github.com/Ggorets0dev/rantovox-telegram-bot.git
+cd rantovox-telegram-bot
 pip install -r requirements.txt
 ```
 
