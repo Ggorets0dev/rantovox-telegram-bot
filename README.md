@@ -1,6 +1,6 @@
 # RantoVox (Telegram bot)
 
-Telegram bot based on Python 3.11 for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries. Languages supported: **Russian**, **English** (queries and interface).
+Telegram bot based on Python 3 for running **Speech-To-Text (STT)** and **Text-To-Speech (TTS)** queries. Languages supported: **Russian**, **English** (queries and interface).
 
 <p align='center'>
        <img height=300 src="src/img/rantovox_github_logo.png"/>
@@ -34,7 +34,7 @@ Bot has a special function called **extra_text_processing**, which introduces ad
 
 ## Installation
 
-> **Note:** Requires [Python 3.11](https://www.python.org/)
+> **Note:** Created and tested on Windows platform, [Python 3.11.4](https://www.python.org/)
 
 ### **Installation manual**
 
@@ -42,11 +42,13 @@ The following steps are required for RantoVox to work correctly:
 
 1) Clone the repository (download source code)
 
-2) Install dependencies using pip with requirements.txt
+2) Create a virtual environment using `python -m venv venv` and activate it
 
-3) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **src/lang** (You can use `make download` to automatically download and post, requires *curl* and *tar*)
+3) Install dependencies using pip with requirements.txt
 
-4) Create your own **.env** file in root folder with variables described in **Environment file** section.
+4) Download latest [vosk](https://pypi.org/project/vosk/) russian and english language models (the small model is more preferable), drop them into **src/lang** (You can use `make download` to automatically download and post, requires curl and tar)
+
+5) Create your own **.env** file in root folder with variables described in **Environment file** section.
 
 ### **Cloning repository and installing requirements**
 

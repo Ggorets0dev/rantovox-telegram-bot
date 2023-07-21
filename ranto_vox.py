@@ -23,7 +23,7 @@ from utils.speech_utils import recognize_speech
 from utils.text_utils import extra_text_processing
 
 
-VERSION = '2.2.1'
+VERSION = '2.2.2'
 
 CWD = os.path.join(os.path.dirname(__file__))
 MAX_REQUEST_INDEX = int(os.environ.get('MAX_REQUEST_INDEX')) if os.environ.get('MAX_REQUEST_INDEX') else 1000
@@ -43,7 +43,7 @@ logger.add('LOGS.log', rotation='256 MB')
 
 
 # NOTE - Display logo and dev info
-print(f"\n\n{figlet_format('RantoVox', font = 'Doom')}")
+print(f"\n\n{figlet_format('RantoVox', font = 'slant')}")
 print(f"Developed by Ggorets0dev, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot (version: {VERSION})", end='\n\n')
 
 
@@ -107,7 +107,7 @@ for voice in ALL_VOICES:
         TTS_ENGINE.setProperty('voice', voice.id)
     elif voice.name == os.environ.get('FEMALE_VOICE_NAME'):
         female_found = True
-if (male_found is False) or (female_found is False):
+if male_found is False or female_found is False:
     logger.error('Failed to find by name some voices specified in the environment variables, familiarize yourself with the available ones below and specify one of them')
 
     for vc in ALL_VOICES:
@@ -118,8 +118,15 @@ if (male_found is False) or (female_found is False):
 
 
 # SECTION - Download static_ffmpeg binaries if it's firts launch
-DEVNULL = os.open(os.devnull, os.O_WRONLY)
-subprocess.run('static_ffmpeg', stdout=DEVNULL,stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+logger.info('Checking availability of ffmpeg....')
+try:
+    DEVNULL = os.open(os.devnull, os.O_WRONLY)
+    subprocess.run('static_ffmpeg', stdout=DEVNULL,stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
+except Exception:
+    logger.error('Failed to call ffmpeg correctly using a subprocess')
+    exit(1)
+else:
+    logger.success('A subprocess in the form of ffmpeg was successfully invoked for validation')
 # !SECTION
 
 
