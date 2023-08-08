@@ -23,7 +23,16 @@ from utils.speech_utils import recognize_speech
 from utils.text_utils import extra_text_processing
 
 
-VERSION = '2.2.2'
+VERSION = '2.2.3'
+
+
+# SECTION - Loading .env
+if os.path.isfile('.env'):
+    load_dotenv('.env')
+else:
+    logger.warning('Environment file was not detected')
+# !SECTION
+
 
 CWD = os.path.join(os.path.dirname(__file__))
 MAX_REQUEST_INDEX = int(os.environ.get('MAX_REQUEST_INDEX')) if os.environ.get('MAX_REQUEST_INDEX') else 1000
@@ -45,14 +54,6 @@ logger.add('LOGS.log', rotation='256 MB')
 # NOTE - Display logo and dev info
 print(f"\n\n{figlet_format('RantoVox', font = 'slant')}")
 print(f"Developed by Ggorets0dev, original GitHub page: https://github.com/Ggorets0dev/RantoVoxBot (version: {VERSION})", end='\n\n')
-
-
-# SECTION - Loading .env
-if os.path.isfile('.env'):
-    load_dotenv('.env')
-else:
-    logger.warning('Environment file was not detected')
-# !SECTION
 
 
 # SECTION - Sign in to Telegram
